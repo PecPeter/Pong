@@ -34,8 +34,8 @@ class cMainState : public cGameState {
 
 		cCollAabb* paddleShape_,
 			*hWallShape_,
-			*vWallShape_,
-			*ballShape_;
+			*vWallShape_;
+		cCollCircle* ballShape_;
 
 		cCollObj* paddle1_,
 			*paddle2_,
@@ -44,6 +44,8 @@ class cMainState : public cGameState {
 			*p2Goal_,
 			*wall1_,
 			*wall2_;
+		double ballVx,
+			   ballVy;
 
 		enum class eKeyAction {
 			ESCAPE,

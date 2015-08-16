@@ -10,9 +10,9 @@ cMainState::cMainState (void):
 	paddleShape_ = new cCollAabb(0.5,5);
 	hWallShape_ = new cCollAabb(100,1);
 	vWallShape_ = new cCollAabb(1,50);
-	ballShape_ = new cCollAabb(1,1);
+	ballShape_ = new cCollCircle(2);
 
-	paddle1_ = world_->createObject (cVector2(225,240),*paddleShape_,
+	paddle1_ = world_->createObject(cVector2(225,240),*paddleShape_,
 			eObjType::DYNAMIC);
 	paddle2_ = world_->createObject(cVector2(415,240),*paddleShape_,
 			eObjType::DYNAMIC);
@@ -26,10 +26,16 @@ cMainState::cMainState (void):
 	kbHandler_.addCommand(eKeyAction::ESCAPE,SDLK_ESCAPE);
 	kbHandler_.addCommand(eKeyAction::M_DOWN,SDLK_DOWN);
 	kbHandler_.addCommand(eKeyAction::M_UP,SDLK_UP);
+
+	ballVx = 5.0;
+	ballVy = -2.0;
 }
 
 cMainState::~cMainState (void) {
 	delete paddleShape_;
+	delete hWallShape_;
+	delete vWallShape_;
+	delete ballShape_;
 	delete world_;
 	delete broadphase_;
 }
@@ -48,8 +54,12 @@ int cMainState::updateState (void) {
 			return eStateAction::REM_STATE;
 	}
 	std::deque<cCollPair>* collPairList = world_->checkColls();
-	for (auto itr : collPairList) {
-		
+	std::cout << collPairList->size() << "\n";
+	for (auto queueItr = collPairList->begin();
+			queueItr != collPairList->end();) {
+		if (queueItr->getCollType() == eCollType::COLLISION) {
+			collPairList->pop_front();
+		}
 	}
 	return eStateAction::NO_CHANGE;
 }
