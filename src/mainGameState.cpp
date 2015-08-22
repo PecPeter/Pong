@@ -18,17 +18,17 @@ cMainState::cMainState (void):
 			eObjType::DYNAMIC);
 	ball_ = world_->createObject(cVector2(320,240),*ballShape_,
 			eObjType::DYNAMIC);
-	p1Goal_ = world_->createObject(cVector2(220,240),*vWallShape_);
-	p2Goal_ = world_->createObject(cVector2(420,240),*vWallShape_);
-	wall1_ = world_->createObject(cVector2(320,190),*hWallShape_);
-	wall2_ = world_->createObject(cVector2(320,290),*hWallShape_);
+	p1Goal_ = world_->createObject(cVector2(219,240),*vWallShape_);
+	p2Goal_ = world_->createObject(cVector2(421,240),*vWallShape_);
+	wall1_ = world_->createObject(cVector2(320,189),*hWallShape_);
+	wall2_ = world_->createObject(cVector2(320,291),*hWallShape_);
 
 	kbHandler_.addCommand(eKeyAction::ESCAPE,SDLK_ESCAPE);
 	kbHandler_.addCommand(eKeyAction::M_DOWN,SDLK_DOWN);
 	kbHandler_.addCommand(eKeyAction::M_UP,SDLK_UP);
 
-	ballVx = 5.0;
-	ballVy = -2.0;
+	ballVx_ = 50.0;
+	ballVy_ = -20.0;
 }
 
 cMainState::~cMainState (void) {
@@ -44,22 +44,29 @@ void cMainState::handleState (SDL_Event& event) {
 	kbHandler_.checkCommand(event.key,&kbActionList_);
 }
 
-int cMainState::updateState (void) {
+int cMainState::updateState (double tickRate) {
+	//Update paddle1 pos
 	for (auto& itr : kbActionList_) {
 		if (itr == eKeyAction::M_DOWN)
-			paddle1_->translate(0,1.5);
-		if (itr == eKeyAction::M_UP)
-			paddle1_->translate(0,-1.5);
-		if (itr == eKeyAction::ESCAPE)
+			paddle1_->translate(0,1);
+		else if (itr == eKeyAction::M_UP)
+			paddle1_->translate(0,-1);
+		else if (itr == eKeyAction::ESCAPE)
 			return eStateAction::REM_STATE;
 	}
-	std::deque<cCollPair>* collPairList = world_->checkColls();
-	std::cout << collPairList->size() << "\n";
-	for (auto queueItr = collPairList->begin();
-			queueItr != collPairList->end();) {
-		if (queueItr->getCollType() == eCollType::COLLISION) {
-			collPairList->pop_front();
+	//Update ball pos
+	ball_->translate((1.0/tickRate)*ballVx_,(1.0/tickRate)*ballVy_);
+
+	std::forward_list<cCollPair>* collPairList = world_->checkColls();
+	while (collPairList->empty() == false) {
+		cCollPair* collPair = &collPairList->front();
+		if (collPair->obj2()->getObjType() == eObjType::DYNAMIC) {
+
 		}
+		else if (collPair->obj2()->getObjType() == eObjType::STATIC) {
+			collPair->obj1()->translate(collPair->getObjOverlap());
+		}
+		collPairList->pop_front();
 	}
 	return eStateAction::NO_CHANGE;
 }

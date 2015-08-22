@@ -1,5 +1,4 @@
 #include "engine.hpp"
-
 #include "gameStateHandler.hpp"
 
 int main (void) {

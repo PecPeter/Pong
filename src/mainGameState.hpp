@@ -1,9 +1,9 @@
 #ifndef MAINGAMESTATE_HPP
 #define MAINGAMESTATE_HPP
 
-#include <deque>
+#include <forward_list>
 #include <vector>
-#include <exception>
+//#include <exception>
 
 #include <SDL2/SDL.h>
 
@@ -25,7 +25,7 @@ class cMainState : public cGameState {
 		~cMainState (void);
 	private:
 		void handleState (SDL_Event& event);
-		int updateState (void);
+		int updateState (double tickRate);
 		void renderState (SDL_Renderer* renderer, double timelag);
 
 		cCollBroadphase* broadphase_;
@@ -44,11 +44,13 @@ class cMainState : public cGameState {
 			*p2Goal_,
 			*wall1_,
 			*wall2_;
-		double ballVx,
-			   ballVy;
+		double ballVx_,
+			   ballVy_;
 
 		enum class eKeyAction {
 			ESCAPE,
+			M_LEFT,
+			M_RIGHT,
 			M_DOWN,
 			M_UP
 		};
