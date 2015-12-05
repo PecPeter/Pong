@@ -3,7 +3,6 @@
 
 #include <forward_list>
 #include <vector>
-//#include <exception>
 
 #include <SDL2/SDL.h>
 
@@ -17,6 +16,8 @@
 #include "cntrlKb.hpp"
 #include "collDebugDrawer.hpp"
 
+#include "collCallback.hpp"
+#include "objInfo.hpp"
 #include "stateAction.hpp"
 
 class cMainState : public cGameState {
@@ -57,5 +58,7 @@ class cMainState : public cGameState {
 		std::vector<eKeyAction> kbActionList_;
 		cCntrlKb<eKeyAction> kbHandler_;
 };
+
+void resetBall (bool direction, cCollObj* ball);
 
 #endif
