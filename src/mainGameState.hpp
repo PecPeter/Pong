@@ -1,6 +1,7 @@
 #ifndef MAINGAMESTATE_HPP
 #define MAINGAMESTATE_HPP
 
+#include <iostream>
 #include <forward_list>
 #include <vector>
 
@@ -28,6 +29,7 @@ class cMainState : public cGameState {
 		void handleState (SDL_Event& event);
 		int updateState (double tickRate);
 		void renderState (SDL_Renderer* renderer, double timelag);
+		void resetBall (bool direction);
 
 		cCollBroadphase* broadphase_;
 		cCollWorld* world_;
@@ -45,8 +47,6 @@ class cMainState : public cGameState {
 			*p2Goal_,
 			*wall1_,
 			*wall2_;
-		double ballVx_,
-			   ballVy_;
 
 		enum class eKeyAction {
 			ESCAPE,
@@ -58,7 +58,5 @@ class cMainState : public cGameState {
 		std::vector<eKeyAction> kbActionList_;
 		cCntrlKb<eKeyAction> kbHandler_;
 };
-
-void resetBall (bool direction, cCollObj* ball);
 
 #endif
