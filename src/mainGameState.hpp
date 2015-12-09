@@ -50,10 +50,10 @@ class cMainState : public cGameState {
 
 		enum class eKeyAction {
 			ESCAPE,
-			M_LEFT,
-			M_RIGHT,
-			M_DOWN,
-			M_UP
+			P1_DOWN,
+			P2_DOWN,
+			P1_UP,
+			P2_UP
 		};
 		std::vector<eKeyAction> kbActionList_;
 		cCntrlKb<eKeyAction> kbHandler_;

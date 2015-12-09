@@ -16,8 +16,7 @@ struct sObjInfo {
 
 struct sBallInfo : public sObjInfo {
 	cVector2 dir_;
-	cVector2 speed_;
-	cVector2 vel_;
+	double speed_;
 };
 
 struct sGoalInfo : sObjInfo {

@@ -7,15 +7,16 @@ cMainState::cMainState (void):
 	world_ = new cCollWorld(broadphase_);
 	world_->setDebugDraw(&debugDraw_);
 
-	paddleShape_ = new cCollAabb(0.5,5);
-	hWallShape_ = new cCollAabb(100,1);
-	vWallShape_ = new cCollAabb(1,50);
+	paddleShape_ = new cCollAabb(4,10);
+	hWallShape_ = new cCollAabb(100,2);
+	vWallShape_ = new cCollAabb(2,50);
 	ballShape_ = new cCollCircle(2);
 
-	paddle1_ = world_->createObject(cVector2(225,240),*paddleShape_,
+	paddle1_ = world_->createObject(cVector2(230,240),*paddleShape_,
 			eObjType::DYNAMIC);
-	paddle2_ = world_->createObject(cVector2(415,240),*paddleShape_,
+	paddle2_ = world_->createObject(cVector2(410,240),*paddleShape_,
 			eObjType::DYNAMIC);
+	paddle2_->rotate(3.141592653589793238462643383279502884197169399375105820974944592);
 	ball_ = world_->createObject(cVector2(0,0),*ballShape_,
 			eObjType::DYNAMIC);
 	ball_->translate(cVector2(320,240));
@@ -34,7 +35,8 @@ cMainState::cMainState (void):
 	goalInfo1->objID_ = goalInfo2->objID_ = eObjID::GOAL;
 	goalInfo1->points_ = goalInfo2->points_ = 0;
 	ballInfo->objID_ = eObjID::BALL;
-	ballInfo->vel_ = cVector2(-80.0,20.0);
+	ballInfo->dir_ = cVector2(-1,1);
+	ballInfo->speed_ = 80;
 
 	paddle1_->setUsrPtr(static_cast<void*>(paddleInfo));
 	paddle2_->setUsrPtr(static_cast<void*>(paddleInfo));
@@ -47,8 +49,10 @@ cMainState::cMainState (void):
 	ball_->setCollCallback(ballCollCallback);
 
 	kbHandler_.addCommand(eKeyAction::ESCAPE,SDLK_ESCAPE);
-	kbHandler_.addCommand(eKeyAction::M_DOWN,SDLK_DOWN);
-	kbHandler_.addCommand(eKeyAction::M_UP,SDLK_UP);
+	kbHandler_.addCommand(eKeyAction::P1_DOWN,SDLK_s);
+	kbHandler_.addCommand(eKeyAction::P1_UP,SDLK_w);
+	kbHandler_.addCommand(eKeyAction::P2_DOWN,SDLK_DOWN);
+	kbHandler_.addCommand(eKeyAction::P2_UP,SDLK_UP);
 }
 
 cMainState::~cMainState (void) {
@@ -61,26 +65,45 @@ cMainState::~cMainState (void) {
 }
 
 void cMainState::handleState (SDL_Event& event) {
-	kbHandler_.checkCommand(event.key,&kbActionList_);
+	switch (event.type) {
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			kbHandler_.checkCommand(event.key,&kbActionList_);
+			break;
+		case SDL_MOUSEMOTION:
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			break;
+		default:
+			break;
+	}
+//	kbHandler_.checkCommand(event.key,&kbActionList_);
 }
 
 int cMainState::updateState (double tickRate) {
 	//Update paddle1 pos
 	for (auto& itr : kbActionList_) {
-		if (itr == eKeyAction::M_DOWN) {
-			paddle1_->translate(0,1);
-			paddle2_->translate(0,1);
+		if (itr == eKeyAction::P1_DOWN) {
+			paddle1_->translate(0,1.5);
 		}
-		else if (itr == eKeyAction::M_UP) {
-			paddle1_->translate(0,-1);
-			paddle2_->translate(0,-1);
+		else if (itr == eKeyAction::P2_DOWN) {
+			paddle2_->translate(0,1.5);
+		}
+		else if (itr == eKeyAction::P1_UP) {
+			paddle1_->translate(0,-1.5);
+		}
+		else if (itr == eKeyAction::P2_UP) {
+			paddle2_->translate(0,-1.5);
 		}
 		else if (itr == eKeyAction::ESCAPE)
 			return eStateAction::REM_STATE;
 	}
 	//Update ball pos
 	sBallInfo* ballInfo = static_cast<sBallInfo*>(ball_->getUsrPtr());
-	ball_->translate((1.0/tickRate)*ballInfo->vel_.getX(),(1.0/tickRate)*ballInfo->vel_.getY());
+	double vx = ballInfo->dir_.getX()*ballInfo->speed_,
+		   vy = ballInfo->dir_.getY()*ballInfo->speed_;
+	ball_->translate((1.0/tickRate)*vx,(1.0/tickRate)*vy);
 
 	std::forward_list<cCollPair>* collPairList = world_->checkColls();
 	bool roundReset = false;
@@ -112,12 +135,13 @@ int cMainState::updateState (double tickRate) {
 		}
 		collPairList->pop_front();
 	}
-	std::cout << "\nP1: " << 
-		static_cast<sGoalInfo*>(p2Goal_->getUsrPtr())->points_ <<
-		"\tP2: " << static_cast<sGoalInfo*>(p1Goal_->getUsrPtr())->points_;
+//	std::cout << "\nP1: " << 
+//		static_cast<sGoalInfo*>(p2Goal_->getUsrPtr())->points_ <<
+//		"\tP2: " << static_cast<sGoalInfo*>(p1Goal_->getUsrPtr())->points_;
 	if (roundReset == true) {
 		ball_->translate(cVector2(320,240)-ball_->getObjPos());
-		ballInfo->vel_ = cVector2(-80.0,20.0);
+		ballInfo->dir_ = cVector2(-1,1);
+		ballInfo->speed_ = 80;
 	}
 	return eStateAction::NO_CHANGE;
 }
