@@ -1,13 +1,13 @@
 #include "mainGameState.hpp"
 
-cMainState::cMainState (void):
+cMainState::cMainState (const sMainStateSettings& stateSettings):
 	cGameState(eStateAction::NO_CHANGE,eStateAction::REM_STATE),
-	broadphase_(nullptr), world_(nullptr) {
+	broadphase_(nullptr), world_(nullptr), aiFunc_(nullptr) {
 	broadphase_ = new cGenBroadphase();
 	world_ = new cCollWorld(broadphase_);
 	world_->setDebugDraw(&debugDraw_);
 
-	paddleShape_ = new cCollAabb(4,10);
+	paddleShape_ = new cCollAabb(2.0,10);
 	hWallShape_ = new cCollAabb(100,2);
 	vWallShape_ = new cCollAabb(2,50);
 	ballShape_ = new cCollCircle(2);
@@ -36,7 +36,7 @@ cMainState::cMainState (void):
 	goalInfo1->points_ = goalInfo2->points_ = 0;
 	ballInfo->objID_ = eObjID::BALL;
 	ballInfo->dir_ = cVector2(-1,1);
-	ballInfo->speed_ = 80;
+	ballInfo->speed_ = 100;
 
 	paddle1_->setUsrPtr(static_cast<void*>(paddleInfo));
 	paddle2_->setUsrPtr(static_cast<void*>(paddleInfo));
@@ -48,11 +48,30 @@ cMainState::cMainState (void):
 
 	ball_->setCollCallback(ballCollCallback);
 
+	if (stateSettings.numPlayers_ == 1) {
+		switch (stateSettings.cpuDiff_) {
+			case 0:
+				aiFunc_ = updateAiEasy;
+				break;
+			case 1:
+				aiFunc_ = updateAiMed;
+				break;
+			case 2:
+				aiFunc_ = updateAiHard;
+				break;
+			default:
+				break;
+		}
+	}
+
 	kbHandler_.addCommand(eKeyAction::ESCAPE,SDLK_ESCAPE);
 	kbHandler_.addCommand(eKeyAction::P1_DOWN,SDLK_s);
 	kbHandler_.addCommand(eKeyAction::P1_UP,SDLK_w);
-	kbHandler_.addCommand(eKeyAction::P2_DOWN,SDLK_DOWN);
-	kbHandler_.addCommand(eKeyAction::P2_UP,SDLK_UP);
+
+	if (stateSettings.numPlayers_ == 2) {
+		kbHandler_.addCommand(eKeyAction::P2_DOWN,SDLK_DOWN);
+		kbHandler_.addCommand(eKeyAction::P2_UP,SDLK_UP);
+	}
 }
 
 cMainState::~cMainState (void) {
@@ -78,26 +97,41 @@ void cMainState::handleState (SDL_Event& event) {
 		default:
 			break;
 	}
-//	kbHandler_.checkCommand(event.key,&kbActionList_);
 }
 
-int cMainState::updateState (double tickRate) {
-	//Update paddle1 pos
+int cMainState::updateState (double tickRate, void* interStateInfo) {
+	//Update paddle pos
+	double tickRateMultiple = 1.0/tickRate;
+	double paddleSpeed = 200;
 	for (auto& itr : kbActionList_) {
 		if (itr == eKeyAction::P1_DOWN) {
-			paddle1_->translate(0,1.5);
-		}
-		else if (itr == eKeyAction::P2_DOWN) {
-			paddle2_->translate(0,1.5);
+			paddle1_->translate(0,tickRateMultiple*paddleSpeed);
 		}
 		else if (itr == eKeyAction::P1_UP) {
-			paddle1_->translate(0,-1.5);
+			paddle1_->translate(0,tickRateMultiple*-paddleSpeed);
+		}
+		else if (itr == eKeyAction::P2_DOWN) {
+			paddle2_->translate(0,tickRateMultiple*paddleSpeed);
 		}
 		else if (itr == eKeyAction::P2_UP) {
-			paddle2_->translate(0,-1.5);
+			paddle2_->translate(0,tickRateMultiple*-paddleSpeed);
 		}
 		else if (itr == eKeyAction::ESCAPE)
 			return eStateAction::REM_STATE;
+	}
+	if (aiFunc_ != nullptr) {
+		switch (aiFunc_(*ball_,*paddle2_)) {
+			case ePaddleMovement::P_UP:
+				paddle2_->translate(0,tickRateMultiple*-paddleSpeed);
+				break;
+			case ePaddleMovement::P_DOWN:
+				paddle2_->translate(0,tickRateMultiple*paddleSpeed);
+				break;
+			case ePaddleMovement::P_NONE:
+				break;
+			default:
+				break;
+		}
 	}
 	//Update ball pos
 	sBallInfo* ballInfo = static_cast<sBallInfo*>(ball_->getUsrPtr());
@@ -139,8 +173,7 @@ int cMainState::updateState (double tickRate) {
 //		static_cast<sGoalInfo*>(p2Goal_->getUsrPtr())->points_ <<
 //		"\tP2: " << static_cast<sGoalInfo*>(p1Goal_->getUsrPtr())->points_;
 	if (roundReset == true) {
-		ball_->translate(cVector2(320,240)-ball_->getObjPos());
-		ballInfo->dir_ = cVector2(-1,1);
+		ball_->translate(cVector2(320,ball_->getObjPos().getY())-ball_->getObjPos());
 		ballInfo->speed_ = 80;
 	}
 	return eStateAction::NO_CHANGE;

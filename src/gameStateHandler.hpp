@@ -5,6 +5,7 @@
 #include "stateHandler.hpp"
 
 #include "stateAction.hpp"
+#include "introGameState.hpp"
 #include "mainGameState.hpp"
 
 class cGameStateHandler : public cStateHandler {

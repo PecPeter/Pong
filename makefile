@@ -18,6 +18,8 @@ vpath %.hpp ${SRC_DIR}
 vpath %.cpp ${SRC_DIR}
 vpath %.o ${OBJ_DIR}
 
+all: debug
+
 debug: ${DEBUG_OBJ}
 	${CC} $(addprefix ${OBJ_DIR},${DEBUG_OBJ}) -o debug ${D_LIB_FLAGS}
 

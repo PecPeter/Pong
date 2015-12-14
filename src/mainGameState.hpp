@@ -17,19 +17,21 @@
 #include "cntrlKb.hpp"
 #include "collDebugDrawer.hpp"
 
+#include "ai.hpp"
 #include "collCallback.hpp"
 #include "objInfo.hpp"
 #include "stateAction.hpp"
 
+typedef ePaddleMovement(*aiFuncContr) (const cCollObj& ball, const cCollObj& controlledPaddle);
+
 class cMainState : public cGameState {
 	public:
-		cMainState (void);
+		cMainState (const sMainStateSettings& stateSettings);
 		~cMainState (void);
 	private:
 		void handleState (SDL_Event& event);
-		int updateState (double tickRate);
+		int updateState (double tickRate, void* interStateInfo);
 		void renderState (SDL_Renderer* renderer, double timelag);
-		void resetBall (bool direction);
 
 		cCollBroadphase* broadphase_;
 		cCollWorld* world_;
@@ -47,6 +49,8 @@ class cMainState : public cGameState {
 			*p2Goal_,
 			*wall1_,
 			*wall2_;
+
+		aiFuncContr aiFunc_; 
 
 		enum class eKeyAction {
 			ESCAPE,
